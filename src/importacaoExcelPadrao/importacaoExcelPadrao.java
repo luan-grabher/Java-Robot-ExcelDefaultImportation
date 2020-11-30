@@ -5,7 +5,7 @@ import Entity.Executavel;
 import LctoTemplate.CfgBancoTemplate;
 import Robo.AppRobo;
 import TemplateContabil.Control.ControleTemplates;
-import TemplateContabil.Model.Entity.CfgTipoLctosBancoModel;
+import TemplateContabil.Model.Entity.CfgImportacaoLancamentos;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +74,7 @@ public class importacaoExcelPadrao {
         try {
 
             ControleTemplates controle = new ControleTemplates(mes, ano, empresa, nomePastaEmpresa, pastaPrincipal);
-            controle.definirFilesAndPaths();
+            controle.replaceMonthAndYearOnMainFolder();
 
             CfgBancoTemplate cfgBanco = new CfgBancoTemplate();
             cfgBanco.setContaBanco(nroBanco);
@@ -82,7 +82,7 @@ public class importacaoExcelPadrao {
             cfgBanco.setFiltroNomeArquivoOriginal(filtroArquivo);
             cfgBanco.setNomeBanco(banco);
             
-            CfgTipoLctosBancoModel cfgLctos = new CfgTipoLctosBancoModel(CfgTipoLctosBancoModel.TIPO_EXCEL);
+            CfgImportacaoLancamentos cfgLctos = new CfgImportacaoLancamentos(CfgImportacaoLancamentos.TIPO_EXCEL);
             cfgLctos.setExcel_colunaData(colunaData);
             cfgLctos.setExcel_colunaDoc(colunaDoc);
             cfgLctos.setExcel_colunaPreTexto(colunaPreHistorico);
@@ -97,8 +97,10 @@ public class importacaoExcelPadrao {
                 cfgLctos.setExcel_colunaValor(colunaValor);
             }
             
+            //Passa variaveis do controle pro modelo do banco
+            controle.definirVariaveisEstaticasModeloBanco();
+            
             List<Executavel> executaveis = new ArrayList<>();
-            executaveis.add(controle.new definirFileTemplatePadrao());
             executaveis.add(controle.new importacaoPadraoBanco(cfgBanco,cfgLctos));
 
             return AppRobo.rodarExecutaveis(nomeApp, executaveis);
