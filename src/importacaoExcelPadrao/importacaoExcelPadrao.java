@@ -1,18 +1,15 @@
 package importacaoExcelPadrao;
 
-import Auxiliar.Valor;
 import Entity.Executavel;
-import LctoTemplate.CfgBancoTemplate;
 import Robo.AppRobo;
 import TemplateContabil.Control.ControleTemplates;
-import TemplateContabil.Model.Entity.CfgImportacaoLancamentos;
-import java.util.ArrayList;
-import java.util.List;
+import TemplateContabil.Model.Entity.Importation;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class importacaoExcelPadrao {
 
-    private static Integer empresa = 0;
-    private static String nomePastaEmpresa = "";
     private static String nomeApp = "";
 
     public static void main(String[] args) {
@@ -22,47 +19,30 @@ public class importacaoExcelPadrao {
             //String parametros = "[mes:04][ano:2019][codigoEmpresa:722][nomePastaEmpresa:Vinicius Dalcin][nomeApp:Vinicius Dalcin Importação][banco:Banco do Brasil#1#001|.ofx#copia]";
             //robo.definirParametros(parametros);
             robo.definirParametros();
-            empresa = robo.getParametro("codigoEmpresa").getInteger();
-            nomePastaEmpresa = robo.getParametro("nomePastaEmpresa").getString();
-            nomeApp = robo.getParametro("nomeApp").getString();
-            String pastaPrincipal = robo.getParametro("pastaPrincipal").getString();
-            
+
+            String pastaEmpresa = robo.getParametro("pastaEmpresa").getString();
+            String pastaAnual = robo.getParametro("pastaAnual").getString();
+            String pastaMensal = robo.getParametro("pastaMensal").getString();
+            String banco = robo.getParametro("banco").getString();
+            String idTemplate = robo.getParametro("idTemplate").getString();
+            String filtroArquivo = robo.getParametro("filtroArquivo").getString();
+
+            Map<String, String> colunas = new HashMap<>();
+            colunas.put("data", robo.getParametro("colunaData").getString());
+            colunas.put("documento", robo.getParametro("colunaDocumento").getString());
+            colunas.put("pretexto", robo.getParametro("colunaPreTexto").getString());
+            colunas.put("data", robo.getParametro("colunaHistorico").getString());
+            colunas.put("data", robo.getParametro("colunaEntrada").getString());
+            colunas.put("data", robo.getParametro("colunaSaida").getString());
+            colunas.put("data", robo.getParametro("colunaValor").getString());
 
             int mes = robo.getParametro("mes").getMes();
             int ano = robo.getParametro("ano").getInteger();
+            nomeApp = "Importação " + pastaEmpresa + " - " + banco;
 
-            Integer nroBanco = 0;
-            String nomeBanco = "";
-            String filtroArquivo = "";
-            String bancoParametro = robo.getParametro("banco").getString();
-            if (!"".equals(bancoParametro)) {
-                String[] bancoDados = bancoParametro.split("#", 3);
-                nomeBanco = bancoDados[0];
-                nroBanco = (new Valor(bancoDados[1])).getInteger();
-                filtroArquivo = bancoDados[2].replaceAll("\\|", ";");
-            }
-
-            String colunaData = robo.getParametro("colunaData").getString();
-            String colunaDoc = robo.getParametro("colunaDoc").getString();
-            String colunaPreHistorico = robo.getParametro("colunaPreHistorico").getString();
-            String colunaHistorico = robo.getParametro("colunaHistorico").getString();
-            String colunaValor = robo.getParametro("colunaValor").getString();
-            
-            robo.setNome(nomeApp + nomeBanco);
+            robo.setNome(nomeApp);
             robo.executar(
-                    principal(
-                            mes,
-                            ano,
-                            nroBanco,
-                            nomeBanco,
-                            filtroArquivo,
-                            pastaPrincipal,
-                            colunaData,
-                            colunaDoc,
-                            colunaPreHistorico,
-                            colunaHistorico,
-                            colunaValor
-                    )
+                    principal(mes, ano, pastaEmpresa, pastaAnual, pastaMensal, banco, idTemplate, filtroArquivo, colunas)
             );
         } catch (Exception e) {
             System.out.println("Ocorreu um erro na aplicação: " + e);
@@ -70,40 +50,22 @@ public class importacaoExcelPadrao {
         }
     }
 
-    public static String principal(int mes, int ano, Integer nroBanco, String banco, String filtroArquivo, String pastaPrincipal, String colunaData, String colunaDoc, String colunaPreHistorico, String colunaHistorico, String colunaValor) {
+    public static String principal(int mes, int ano, String pastaEmpresa, String pastaAnual, String pastaMensal, String banco, String idTemplate, String filtroArquivo, Map<String, String> colunas) {
         try {
+            Importation importation = new Importation(Importation.TIPO_EXCEL);
+            importation.setIdTemplateConfig(idTemplate);
+            importation.getExcelCols().putAll(colunas);
+            importation.setNome(banco);
 
-            ControleTemplates controle = new ControleTemplates(mes, ano, empresa, nomePastaEmpresa, pastaPrincipal);
-            controle.replaceMonthAndYearOnMainFolder();
+            ControleTemplates controle = new ControleTemplates(mes, ano);
+            controle.setPastaEscMensal(pastaEmpresa);
+            controle.setPasta(pastaAnual, pastaMensal);
 
-            CfgBancoTemplate cfgBanco = new CfgBancoTemplate();
-            cfgBanco.setContaBanco(nroBanco);
-            cfgBanco.setEmpresa(empresa);
-            cfgBanco.setFiltroNomeArquivoOriginal(filtroArquivo);
-            cfgBanco.setNomeBanco(banco);
-            
-            CfgImportacaoLancamentos cfgLctos = new CfgImportacaoLancamentos(CfgImportacaoLancamentos.TIPO_EXCEL);
-            cfgLctos.setExcel_colunaData(colunaData);
-            cfgLctos.setExcel_colunaDoc(colunaDoc);
-            cfgLctos.setExcel_colunaPreTexto(colunaPreHistorico);
-            cfgLctos.setExcel_colunaComplementoHistorico(colunaPreHistorico);
-            
-            //Valor
-            String[] colunasValor = colunaValor.split(";",2);
-            if(colunasValor.length == 2){
-                cfgLctos.setExcel_colunaEntrada(colunasValor[0]);
-                cfgLctos.setExcel_colunaSaida(colunasValor[1]);
-            }else{
-                cfgLctos.setExcel_colunaValor(colunaValor);
-            }
-            
-            //Passa variaveis do controle pro modelo do banco
-            controle.definirVariaveisEstaticasModeloBanco();
-            
-            List<Executavel> executaveis = new ArrayList<>();
-            executaveis.add(controle.new importacaoPadraoBanco(cfgBanco,cfgLctos));
+            Map<String, Executavel> execs = new LinkedHashMap<>();
+            execs.put("Procurando arquivo", controle.new defineArquivoNaImportacao(filtroArquivo,importation));
+            execs.put("Criando template", controle.new defineArquivoNaImportacao(filtroArquivo,importation));
 
-            return AppRobo.rodarExecutaveis(nomeApp, executaveis);
+            return AppRobo.rodarExecutaveis(nomeApp, execs);
         } catch (Exception e) {
             return "Ocorreu um erro no Java: " + e;
         }
