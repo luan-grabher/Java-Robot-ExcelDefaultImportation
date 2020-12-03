@@ -23,7 +23,7 @@ public class importacaoExcelPadrao {
             String pastaEmpresa = robo.getParametro("pastaEmpresa").getString();
             String pastaAnual = robo.getParametro("pastaAnual").getString();
             String pastaMensal = robo.getParametro("pastaMensal").getString();
-            String banco = robo.getParametro("banco").getString();
+            String nomeTemplate = robo.getParametro("nomeTemplate").getString();
             String idTemplate = robo.getParametro("idTemplate").getString();
             String filtroArquivo = robo.getParametro("filtroArquivo").getString();
 
@@ -38,11 +38,11 @@ public class importacaoExcelPadrao {
 
             int mes = robo.getParametro("mes").getMes();
             int ano = robo.getParametro("ano").getInteger();
-            nomeApp = "Importação " + pastaEmpresa + " - " + banco;
+            nomeApp = "Importação " + pastaEmpresa + " - " + nomeTemplate;
 
             robo.setNome(nomeApp);
             robo.executar(
-                    principal(mes, ano, pastaEmpresa, pastaAnual, pastaMensal, banco, idTemplate, filtroArquivo, colunas)
+                    principal(mes, ano, pastaEmpresa, pastaAnual, pastaMensal, nomeTemplate, idTemplate, filtroArquivo, colunas)
             );
         } catch (Exception e) {
             System.out.println("Ocorreu um erro na aplicação: " + e);
@@ -50,12 +50,12 @@ public class importacaoExcelPadrao {
         }
     }
 
-    public static String principal(int mes, int ano, String pastaEmpresa, String pastaAnual, String pastaMensal, String banco, String idTemplate, String filtroArquivo, Map<String, String> colunas) {
+    public static String principal(int mes, int ano, String pastaEmpresa, String pastaAnual, String pastaMensal, String nomeTemplate, String idTemplate, String filtroArquivo, Map<String, String> colunas) {
         try {
             Importation importation = new Importation(Importation.TIPO_EXCEL);
             importation.setIdTemplateConfig(idTemplate);
             importation.getExcelCols().putAll(colunas);
-            importation.setNome(banco);
+            importation.setNome(nomeTemplate);
 
             ControleTemplates controle = new ControleTemplates(mes, ano);
             controle.setPastaEscMensal(pastaEmpresa);
@@ -63,7 +63,7 @@ public class importacaoExcelPadrao {
 
             Map<String, Executavel> execs = new LinkedHashMap<>();
             execs.put("Procurando arquivo", controle.new defineArquivoNaImportacao(filtroArquivo,importation));
-            execs.put("Criando template", controle.new defineArquivoNaImportacao(filtroArquivo,importation));
+            execs.put("Criando template", controle.new converterArquivoParaTemplate(importation));
 
             return AppRobo.rodarExecutaveis(nomeApp, execs);
         } catch (Exception e) {
