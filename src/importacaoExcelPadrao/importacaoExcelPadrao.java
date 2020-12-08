@@ -31,10 +31,10 @@ public class importacaoExcelPadrao {
             colunas.put("data", robo.getParametro("colunaData").getString());
             colunas.put("documento", robo.getParametro("colunaDocumento").getString());
             colunas.put("pretexto", robo.getParametro("colunaPreTexto").getString());
-            colunas.put("data", robo.getParametro("colunaHistorico").getString());
-            colunas.put("data", robo.getParametro("colunaEntrada").getString());
-            colunas.put("data", robo.getParametro("colunaSaida").getString());
-            colunas.put("data", robo.getParametro("colunaValor").getString());
+            colunas.put("historico", robo.getParametro("colunaHistorico").getString());
+            colunas.put("entrada", robo.getParametro("colunaEntrada").getString());
+            colunas.put("saida", robo.getParametro("colunaSaida").getString());
+            colunas.put("valor", robo.getParametro("colunaValor").getString());
 
             int mes = robo.getParametro("mes").getMes();
             int ano = robo.getParametro("ano").getInteger();
